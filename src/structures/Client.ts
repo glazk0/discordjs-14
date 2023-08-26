@@ -8,6 +8,7 @@ import { EventHandler } from '../events/EventHandler';
 
 import { Logger, createLogger } from '../lib/Logger';
 import { registerClientEvents } from '../lib/RegisterEvents';
+import { redis } from '../lib/Redis';
 
 import { clientSymbol, options } from '../utils/Constants';
 
@@ -35,6 +36,13 @@ export class Client extends DiscordClient {
   public readonly logger: typeof Logger;
 
   /**
+   * Redis cache.
+   * @type {typeof redis}
+   * @readonly
+   */
+  public readonly cache: typeof redis;
+
+  /**
    * The client's interactions.
    * @type {Collection<string, Interaction>}
    */
@@ -58,6 +66,8 @@ export class Client extends DiscordClient {
 
     this.eventHandler = new EventHandler();
 
+    this.cache = redis;
+
     this.logger = createLogger(String(this.cluster.id));
   }
 
@@ -70,6 +80,8 @@ export class Client extends DiscordClient {
     await this.eventHandler.init();
 
     await registerClientEvents();
+
+    await this.cache.connect();
 
     try {
       await super.login(process.env.TOKEN);
